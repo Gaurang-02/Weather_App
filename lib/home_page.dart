@@ -73,6 +73,7 @@ class _HomePageState extends State<HomePage> {
                   width: searchBarWidth,
                   child: Column(
                     children: [
+                      //searchBar ui
                       TextFormField(
                         controller: _controller,
                         style: TextStyle(color: Colors.white),
@@ -94,6 +95,7 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(height: 10),
                       if (lastSearchCities.isNotEmpty)
                       Column(
+                        //listing the recent searched cities
                         children: lastSearchCities
                             .map((city) => ListTile(
                                   title: Text(city),

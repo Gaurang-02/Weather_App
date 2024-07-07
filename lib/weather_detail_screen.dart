@@ -35,7 +35,7 @@ class _WeatherDetailScreenState extends State<WeatherDetailScreen> {
         response = newResponse;
       });
     } catch (error) {
-      // Handle error appropriately here
+      // Handle error appropriately here showing snackBar message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to refresh weather data. Please try again.'),
