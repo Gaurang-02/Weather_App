@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:weather_app/api.dart';
 import 'package:weather_app/weather_model.dart';
-
-import 'weather_detail_screen.dart'; // Import the new screen
+import 'weather_detail_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -21,14 +20,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadLastSearchCity();
+    _loadLastSearchCities();
   }
 
-  Future<void> _loadLastSearchCity() async {
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLastSearchCities() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      lastSearchCities = prefs.getStringList('lastSearchCity') ?? [];
-      
+      lastSearchCities = prefs.getStringList('lastSearchCities') ?? [];
     });
   }
 
@@ -45,16 +49,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    bool isTablet =
-        screenWidth > 600; // Adjust this threshold for your tablet design
+    bool isTablet = screenWidth > 600;
 
     double searchBarWidth = isTablet ? screenWidth * 0.6 : screenWidth * 0.9;
 
@@ -64,35 +61,31 @@ class _HomePageState extends State<HomePage> {
           title: Center(child: Text("Weather App")),
         ),
         body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: searchBarWidth,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _controller,
-                        style: TextStyle(color: Colors.white),
-                        decoration: InputDecoration(
-                          hintText: 'Search city here',
-                          filled: true,
-                          fillColor: Colors.black,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                            borderSide: BorderSide.none,
-                          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: searchBarWidth,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _controller,
+                      style: TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Search city here',
+                        filled: true,
+                        fillColor: Colors.black,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                          borderSide: BorderSide.none,
                         ),
-                        onTap: (){
-                          setState(() {
-                            //to refresh the ui
-                          });
-                        },
                       ),
-                      SizedBox(height: 10),
-                      if (lastSearchCities.isNotEmpty)
+                      onTap: () {
+                        setState(() {}); // To refresh the UI
+                      },
+                    ),
+                    SizedBox(height: 10),
+                    if (lastSearchCities.isNotEmpty)
                       Column(
                         children: lastSearchCities
                             .map((city) => ListTile(
@@ -105,25 +98,24 @@ class _HomePageState extends State<HomePage> {
                                 ))
                             .toList(),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          _getWeatherData(_controller.text);
-                        },
-                        child: Text("Search"),
+                    ElevatedButton(
+                      onPressed: () {
+                        _getWeatherData(_controller.text);
+                      },
+                      child: Text("Search"),
+                    ),
+                    SizedBox(height: 10),
+                    if (inProgress)
+                      CircularProgressIndicator()
+                    else if (errorMessage != null)
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(color: Colors.red),
                       ),
-                      SizedBox(height: 10),
-                      if (inProgress)
-                        CircularProgressIndicator()
-                      else if (errorMessage != null)
-                        Text(
-                          errorMessage!,
-                          style: TextStyle(color: Colors.red),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -142,7 +134,7 @@ class _HomePageState extends State<HomePage> {
         throw Exception("No data received");
       }
 
-      //save the last searched city
+      // Save the last searched city
       await _saveLastSearchCity(location);
 
       // Navigate to WeatherDetailScreen if data is available
@@ -154,12 +146,10 @@ class _HomePageState extends State<HomePage> {
             onRefresh: () => weatherApi().getCurrentWeather(location),
           ),
         ),
-      ).then((_){
-        //refresh the state when returning back
-        _loadLastSearchCity();
-        setState(() {
-          
-        });
+      ).then((_) {
+        // Refresh the state when returning to the home screen
+        _loadLastSearchCities();
+        setState(() {});
       });
     } catch (e) {
       setState(() {
